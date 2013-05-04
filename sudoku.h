@@ -79,8 +79,8 @@ order that gets you there. Give out hints.
 #define MAX_BOARD_COLS 9
 
 #define MAXPATHLEN     1024
-#define INPUT_FILE     "board_in.txt"
-#define OUTPUT_FILE    "board_out.txt"
+#define DEFAULT_PATH   "boards"
+#define DEFAULT_FILE   "b1"
 #define MAX_LINE       200
 
 #define xyz 54

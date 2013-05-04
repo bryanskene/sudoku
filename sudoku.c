@@ -28,7 +28,8 @@ CLEANUP:
 
 */
 
-char fnIn[MAXPATHLEN+1]; // use the system-defined MACRO instead
+char pathname[MAXPATHLEN+1]; // use the system-defined MACRO instead
+char fnIn[MAXPATHLEN+1];
 char fnOut[MAXPATHLEN+1];
 FILE *fpIn;
 FILE *fpOut;
@@ -573,20 +574,32 @@ FILE *openFileTry(FILE **fp, char *fargs, char *folder, char *leaf)
 
     *fp = fopen(fn, fargs);
 
+    if(fp) {
+        printf("openFileTry: opened (%s) %s\n", fargs, fn);
+    }
+    else {
+        printf("openFileTry: !opened (%s) %s\n", fargs, fn);
+    }
+
     return(*fp);
 }
 
 /* ------------------------------------------------------------------------- */
 int openFiles()
 {
+    // XXX - this is ridiculous .. use getopts, set a board root dir and fname.
+    // no hardcoding dude.
+
+    // Try CWD and just the fnames
     if(openFileTry(&fpIn, "r", NULL, fnIn)) {
         openFileTry(&fpOut, "w", NULL, fnOut);
     }
-    else if(openFileTry(&fpIn, "r", "boards", fnIn)) {
-        openFileTry(&fpOut, "w", "boards", fnOut);
-    }
-    else if(openFileTry(&fpIn, "r", "/Users/bryan/sudoku/boards", fnIn)) {
-        openFileTry(&fpOut, "w", "/Users/bryan/sudoku/boards", fnOut);
+
+    // Try path and fnames
+    if(!fpIn) {
+        if(openFileTry(&fpIn, "r", pathname, fnIn)) {
+            openFileTry(&fpOut, "w", pathname, fnOut);
+        }
     }
 
     if(!fpOut) {
@@ -599,9 +612,10 @@ int openFiles()
 /* ------------------------------------------------------------------------- */
 void printUsage()
 {
-    printf("SUMMARY: sudoku -if <input file> -of <output file> -b <root dir>");
+    printf("SUMMARY: sudoku -d <pathname for boards> -if <input file> -of <output file> -b <board root fname>");
     printf("\n");
-    printf("EXAMPLE: ./sudoku -if xxx -of xxx\n");
+    printf("EXAMPLE: ./sudoku -if xxx.in -of xxx.out\n");
+    printf("EXAMPLE: ./sudoku -path boards -b xxx\n");
 }
 
 /* ------------------------------------------------------------------------- */
@@ -613,8 +627,9 @@ int main(int argc, char *argv[])
 
     int i;
 
-    strcpy(fnIn, INPUT_FILE);
-    strcpy(fnOut, OUTPUT_FILE);
+    strcpy(pathname, DEFAULT_PATH);
+    sprintf(fnIn, "%s", DEFAULT_FILE);
+    sprintf(fnOut, "%s.out", DEFAULT_FILE);
 
     for (i = 1; i < argc; i++) {  /* Skip argv[0] (program name). */
 
@@ -627,6 +642,7 @@ int main(int argc, char *argv[])
             }
             else {
                 // Print usage & exit
+                printUsage(); return(0);
             }
         }
         else if(strncmp(argv[i], "-o", 2) == 0) {  /* Process optional arguments. */
@@ -638,15 +654,27 @@ int main(int argc, char *argv[])
             }
             else {
                 // Print usage & exit
+                printUsage(); return(0);
             }
         }
-        // -board <root>
+        // -board <root board fname>
         else if(strncmp(argv[i], "-b", 2) == 0) {  /* Process optional arguments. */
             if (i + 1 <= argc - 1) {
                 i++;
-                snprintf(fnIn , MAXPATHLEN, "%s.in" , argv[i]);
+                snprintf(fnIn , MAXPATHLEN, "%s" , argv[i]);
                 snprintf(fnOut, MAXPATHLEN, "%s.out", argv[i]);
             }
+        }
+        // -path <root path>
+        else if(strncmp(argv[i], "-p", 2) == 0) {  /* Process optional arguments. */
+            if (i + 1 <= argc - 1) {
+                i++;
+                snprintf(pathname , MAXPATHLEN, "%s" , argv[i]);
+            }
+        }
+        else if(strncmp(argv[i], "-h", 2) == 0
+                || strncmp(argv[i], "-u", 2) == 0) {  /* Process optional arguments. */
+            printUsage(); return(0);
         }
         else {
             // Process non-optional arguments here.
