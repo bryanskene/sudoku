@@ -152,6 +152,34 @@ return(ERROR);
         return(SUCCESS);
 }
 
+/* ------------------------------------------------------------------------- */
+int unsetVal(board_t *pB, int x, int y)
+{
+        int val;
+        char *strFN = "unsetVal";
+        cell_t *pCell = NULL;
+
+        if(!pB) return(ERROR);
+
+        pCell = &(pB->grid[x][y]);
+
+        val = pCell->val;
+        if(!val) {
+            printf("%s: can't unset cell(%d, %d) already of val == 0\n", strFN, x, y);
+            return(ERROR);
+        }
+        else {
+            printf("%s: unset cell(%d, %d) val == %d\n", strFN, x, y, val);
+        }
+
+        pCell->val = 0;
+        pB->row[y].has[val] = FALSE;
+        pB->col[x].has[val] = FALSE;
+        pB->box[whichBox(x, y)].has[val] = FALSE;
+
+        return(SUCCESS);
+}
+
 
 
 /* ------------------------------------------------------------------------- */
@@ -487,12 +515,18 @@ printf("solveBoardSimple: i1=%d, i2=%d, i3=%d, i4=%d, i5=%d\n", i1, i2, i3, i4, 
         for(y = 0; y < MAX_BOARD_ROWS; y++) {
             pCell = &(pB->grid[x][y]);
             if(pCell->val == 0) {
+                fprintf(fpOut, "=================\n");
+                fprintf(fpOut, "solveBoardSimple: Failed to solve just on constraints\n");
+                fprintf(fpOut, "=================\n");
                 return(FALSE);
             }
         }
     }
 
     // If we get here we didn't find any cell with a val == 0, so board is solved
+    fprintf(fpOut, "=================\n");
+    fprintf(fpOut, "solveBoardSimple: SOLVED\n");
+    fprintf(fpOut, "=================\n");
     return(TRUE);
 }
 
@@ -506,41 +540,59 @@ printf("solveBoardSimple: i1=%d, i2=%d, i3=%d, i4=%d, i5=%d\n", i1, i2, i3, i4, 
 // So let's copy the board, and guess one of the values from a cell
 // where numMaybe is a minimum.
 //
-bool_t solveBoard(FILE *fpOut, board_t *pB)
+bool_t solveBoard(FILE *fpOut, board_t *pB_in)
 {
-    int     i, t, x, y;
+    int     i, box, t, x, y;
     cell_t  *pCell = NULL;
-    board_t *pBoardNew = NULL;
+    board_t *pB_new;
     board_t boardNew;
 
-    if(solveBoardSimple(fpOut, pB)) {
+    if(solveBoardSimple(fpOut, pB_in)) {
         return(TRUE);
     }
 
+    pB_new = &boardNew;
+    memcpy(pB_new, pB_in, sizeof(board_t));
+
     // not solved so look for first unset cell and try all the values
-    for (x = 0; x < MAX_BOARD_COLS; x++) {
-        for (y = 0; x < MAX_BOARD_ROWS; y++) {
+    i = 0;
+    for (y = 0; x < MAX_BOARD_ROWS; y++) {
+        for (x = 0; x < MAX_BOARD_COLS; x++) {
 
             // Find first unset cell in the grid ...
-            pCell = &(pB->grid[x][y]);
+            box = whichBox(x, y);
+
+            pCell = &(pB_new->grid[x][y]);
 
             if(pCell->val == 0) {
 
                 for(t = 1; t < MAX_DIGITS + 1; t++) {
                     // as long as not constrained, try t as a value
-                    if(!pB->row[y].has[t]
-                    && !pB->col[x].has[t]
-                    && !pB->box[whichBox(x, y)].has[t]) { // XXX: lazy DANGEROUS deref
-                        pCell->val = t;
+                    if(!pB_in->row[y].has[t]
+                    && !pB_in->col[x].has[t]
+                    && !pB_in->box[box].has[t]) { // XXX: lazy DANGEROUS deref
+
+                        // XXX - save copy of board before seeding or attempting to solve.
+                        memcpy(pB_new, pB_in, sizeof(board_t));
+
+                        setVal(pB_new, x, y, t); //pCell->val = t;
                         pCell->justSet = setvalSeed;
-fprintf(fpOut, "solveBoard: seeding (%d, %d) := %d\n", x, y, t);
-                        if(solveBoardSimple(fpOut, pB)) {
+                        i++;
+fprintf(fpOut, "solveBoard: seed attempt #%d -> (%d, %d) := %d\n", i, x, y, t);
+
+                        if(solveBoardSimple(fpOut, pB_new)) {
                             return(TRUE);
+                        }
+                        else {
+                            // XXX - any cleanup needed after failed attempt?
                         }
                     }
                 }
-                // OK, that did not solve it; try another value or move on.
-                pCell->val = 0; // that didn't work! Restore 0, better luck next cell.
+
+                // XXX - prob. rm these 4 lines of comments in favor or save/restore board.
+                // OK, tried all the digits this cell, that did not solve it,
+                // set back to 0; try another value or move on.
+                // unsetVal(pB, x, y);
 
                 // XXX - need to start doing some real combinitorial analysis of
                 // this problem and come up with the simplifying process / discovery
@@ -578,7 +630,7 @@ FILE *openFileTry(FILE **fp, char *fargs, char *folder, char *leaf)
         printf("openFileTry: opened (%s) %s\n", fargs, fn);
     }
     else {
-        printf("openFileTry: !opened (%s) %s\n", fargs, fn);
+        printf("openFileTry: open FAILED (%s) %s\n", fargs, fn);
     }
 
     return(*fp);
@@ -587,9 +639,6 @@ FILE *openFileTry(FILE **fp, char *fargs, char *folder, char *leaf)
 /* ------------------------------------------------------------------------- */
 int openFiles()
 {
-    // XXX - this is ridiculous .. use getopts, set a board root dir and fname.
-    // no hardcoding dude.
-
     // Try CWD and just the fnames
     if(openFileTry(&fpIn, "r", NULL, fnIn)) {
         openFileTry(&fpOut, "w", NULL, fnOut);
@@ -622,6 +671,7 @@ void printUsage()
 int main(int argc, char *argv[])
 {
     // XXX - someday download and use argtable project
+    // XXX - no, actually use getopt
 
     board_t board;
 
@@ -673,7 +723,7 @@ int main(int argc, char *argv[])
             }
         }
         else if(strncmp(argv[i], "-h", 2) == 0
-                || strncmp(argv[i], "-u", 2) == 0) {  /* Process optional arguments. */
+             || strncmp(argv[i], "-u", 2) == 0) {  /* Process optional arguments. */
             printUsage(); return(0);
         }
         else {
@@ -697,9 +747,13 @@ int main(int argc, char *argv[])
 	if(solveBoard(fpOut, &board)) {
         printf("CONGRATULATIONS!!! Board is solved.\n");
     }
+    else {
+        printf("BUMMER!!! Board was NOT solved.\n");
+    }
 
+    // XXX - unecessary since the solution trace does this (aplenty)
 	// print solution to screen
-	printBoard(fpOut, &board, TRUE, FALSE);
+	// printBoard(fpOut, &board, TRUE, FALSE);
 
     fclose(fpOut);
 	
