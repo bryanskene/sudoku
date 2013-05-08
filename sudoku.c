@@ -531,23 +531,30 @@ printf("solveBoardSimple: i1=%d, i2=%d, i3=%d, i4=%d, i5=%d\n", i1, i2, i3, i4, 
 }
 
 /* ------------------------------------------------------------------------- */
-// Begin with the boar read in from file. Try to solve it the Simple way,
+// Begin with the board read in from file. Try to solve it the Simple way,
 // without guessing. If there remain unset cells, we need to then guess.
-// This is the combinatorial algorithms part :)
+// This should be the combinatorial algorithms part. But I'm brute forcing. :)
 //
 // if board STILL not solved, we need to just try putting in a value
 // to see if it will result in a solved puzzle. Right?
 // So let's copy the board, and guess one of the values from a cell
 // where numMaybe is a minimum.
 //
+// Hypothesis: this could still not result in a solution, requiring a more algorithmic
+// approach.
+//
 bool_t solveBoard(FILE *fpOut, board_t *pB_in)
 {
+    static int i_recurse = 0;
+
     int     i, box, t, x, y;
     cell_t  *pCell = NULL;
     board_t *pB_new;
     board_t boardNew;
 
-    if(solveBoardSimple(fpOut, pB_in)) {
+    fprintf(fpOut, "solveBoard: i_recurse = %d\n", i_recurse);
+
+    if(i_recurse == 0 && solveBoardSimple(fpOut, pB_in)) {
         return(TRUE);
     }
 
@@ -556,7 +563,7 @@ bool_t solveBoard(FILE *fpOut, board_t *pB_in)
 
     // not solved so look for first unset cell and try all the values
     i = 0;
-    for (y = 0; x < MAX_BOARD_ROWS; y++) {
+    for (y = 0; y < MAX_BOARD_ROWS; y++) {
         for (x = 0; x < MAX_BOARD_COLS; x++) {
 
             // Find first unset cell in the grid ...
@@ -568,11 +575,11 @@ bool_t solveBoard(FILE *fpOut, board_t *pB_in)
 
                 for(t = 1; t < MAX_DIGITS + 1; t++) {
                     // as long as not constrained, try t as a value
-                    if(!pB_in->row[y].has[t]
+                    if(!pB_in->row[y].has[t] // XXX - should be pB_new???
                     && !pB_in->col[x].has[t]
                     && !pB_in->box[box].has[t]) { // XXX: lazy DANGEROUS deref
 
-                        // XXX - save copy of board before seeding or attempting to solve.
+                        // XXX - work from a copy of board for seeding and attempting to solve, which leaves the board down a dead-end if not solved.
                         memcpy(pB_new, pB_in, sizeof(board_t));
 
                         setVal(pB_new, x, y, t); //pCell->val = t;
@@ -584,7 +591,11 @@ fprintf(fpOut, "solveBoard: seed attempt #%d -> (%d, %d) := %d\n", i, x, y, t);
                             return(TRUE);
                         }
                         else {
-                            // XXX - any cleanup needed after failed attempt?
+                            // XXX - recurse ... could be very dangerous
+                            i_recurse++;
+                            if(solveBoard(fpOut, pB_new)) {
+                                return(TRUE);
+                            }
                         }
                     }
                 }
