@@ -1,5 +1,3 @@
-TODO: add an ascii doc or other readme page.
-
 Usage:
 % sudoku [options ...] -path <pathname for boards> -if <input file> -of <output file> -b <board root fname>
 
@@ -13,4 +11,15 @@ OPITONS:
 
 EXAMPLE: ./sudoku -r 3 -b tough_one
 EXAMPLE: ./sudoku -if puzzle27.in -of xxx.out
+
+TODO:
+* add an ascii doc or other readme page.
+* get it to solve evil2
+* massive code cleanup
+* ruby version
+* golang version
+* add a UI
+* more flexible input format (e.g. '.' instead of '0' for starters)
+* better complexity measurements
+* ability to generate puzzles of a given complexity
 
