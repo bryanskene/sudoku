@@ -14,6 +14,8 @@ EXAMPLE: ./sudoku -if puzzle27.in -of xxx.out
 
 TODO:
 * add an ascii doc or other readme page.
+* fix the ridiculous Makefile
+* beef up the runall script
 * get it to solve evil2
 * massive code cleanup
 * ruby version
