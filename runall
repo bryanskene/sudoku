@@ -2,21 +2,27 @@
 
 # FUTURE: analyze output of each run, find easy/hardest, etc.
 
-boards="
-  AA-c AA-d AA-e AA-f AA-h
-  Cessi-1
-  F-7
-  b1
-  dom dom1 dom3 dom3b
-  evil evil2
-  k2
-  killer1
-"
+boards=$(ls boards)
+#boards="
+#  AA-c AA-d AA-e AA-f AA-h
+#  Cessi-1
+#  F-7
+#  b1
+#  b2-symmetry
+#  dom dom1 dom3 dom3b
+#  evil
+#  evil2
+#  k2
+#  killer1
+#"
 
 for b in $boards; do
-    ./sudoku -r 3 -d -b $b
+  echo "===> DOING: $b"
+  ./sudoku -r 3 -b $b
 done
 
+
+find . -name "*.out" | xargs grep -c i_recurse
 
 # ./sudoku -r 3 -d -b AA-c -d
 # ./sudoku -r 3 -d -b AA-d
