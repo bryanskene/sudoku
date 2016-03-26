@@ -3,6 +3,8 @@
 /*
 Gonzo-style log of my project.
 
+3/26/16: testing 1 2 3
+
 4/20/13: started as exercise to unrust my programming skills. I like sudoku on airplanes, but my brain continuously nags at me to write this program and "discover" the algorithms needed to solve all sudoku boards.
 
 4/30/13: able to solve puzzles based on the simple constraints (unique occurance in col, row, box)
