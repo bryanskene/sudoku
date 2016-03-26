@@ -1,0 +1,37 @@
+#! /bin/bash
+
+# FUTURE: analyze output of each run, find easy/hardest, etc.
+
+boards="
+  AA-c AA-d AA-e AA-f AA-h
+  Cessi-1
+  F-7
+  b1
+  dom dom1 dom3 dom3b
+  evil evil2
+  k2
+  killer1
+"
+
+for b in $boards; do
+    ./sudoku -r 3 -d -b $b
+done
+
+
+# ./sudoku -r 3 -d -b AA-c -d
+# ./sudoku -r 3 -d -b AA-d
+# ./sudoku -r 3 -d -b AA-e
+# ./sudoku -r 3 -d -b AA-f
+# ./sudoku -r 3 -d -b AA-g
+# ./sudoku -r 3 -d -b AA-h
+# ./sudoku -r 3 -d -b Cessi-1
+# ./sudoku -r 3 -d -b F-7
+# ./sudoku -r 3 -d -b b1
+# ./sudoku -r 3 -d -b dom
+# ./sudoku -r 3 -d -b dom1
+# ./sudoku -r 3 -d -b dom3
+# ./sudoku -r 3 -d -b dom3b
+# ./sudoku -r 3 -d -b evil
+# ./sudoku -r 3 -d -b evil2
+# ./sudoku -r 3 -d -b k2
+# ./sudoku -r 3 -d -b killer1
