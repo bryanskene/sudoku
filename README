@@ -1,4 +1,16 @@
-git add *
-git status
+TODO: add an ascii doc or other readme page.
 
+Usage:
+% sudoku [options ...] -path <pathname for boards> -if <input file> -of <output file> -b <board root fname>
+
+OPITONS:
+  -d          : increase the debug level
+  -r <n>      : max recursion depth for brute-force guessing. 3 seems like a good number.
+  -b <fnroot> : set root filename for boards (default is 'b1').
+  -p <path>   : set path to boards directory (default is 'boards')
+  -if <fn>    : set input board filename explicitly (default is path/fnroot)
+  -of <fn>    : set output board filename explicitly (default is path/fnroot.out)
+
+EXAMPLE: ./sudoku -r 3 -b tough_one
+EXAMPLE: ./sudoku -if puzzle27.in -of xxx.out
 
