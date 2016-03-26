@@ -1,5 +1,6 @@
 # temp txt files
 xxx*
+*.swp
 
 # solved sudoku boards
 *.out
